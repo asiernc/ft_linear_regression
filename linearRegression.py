@@ -3,7 +3,7 @@ import sys
 import csv
 import numpy as np
 from utilsData import load_data, save_thetas, get_thetas, get_estimated_price
-from algorithmsRegression import train
+from algorithmsRegression import train, mse
 import matplotlib.pyplot as plt
 
 def standarize_data(mileages):
@@ -46,8 +46,7 @@ def draw(mileages, prices, theta0, theta1, mean, std_dev):
 	plt.xlabel('Mileages')
 	plt.ylabel('Price')
 	plt.legend()
-	plt.show()
-
+	plt.savefig("plot.png")
 
 def main():
 	theta0, theta1 = get_thetas()
@@ -61,6 +60,7 @@ def main():
 				print({"theta0": theta0, "theta1": theta1})
 				if not (theta0 == float('nan') or theta1 == float('nan')):
 					save_thetas(theta0, theta1)
+					print(f'Mean Square Error: {mse(prices, standardized_mileages)}')
 					print("Model trained and thetas saved.")
 				else:
 					print("Error: Training failed due to invalid data.")

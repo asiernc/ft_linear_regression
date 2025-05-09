@@ -1,4 +1,20 @@
-from utilsData import get_estimated_price
+from utilsData import get_estimated_price, get_thetas
+
+def mse(price, mileage):
+	theta0, theta1 = get_thetas()
+	print(mileage)
+	n = len(price)
+	if n == 0:
+		print("Error. No data avalaible")
+		return float('nan')
+	sum_square_errors = 0
+	for i in range(n):
+		prediction = get_estimated_price(mileage[i], theta0, theta1)
+		predictions = [get_estimated_price(m, theta0, theta1) for m in mileage]
+		print(f"Predictions: {predictions}")
+		error = price[i] - prediction
+		sum_square_errors += error ** 2
+	return sum_square_errors / n
 
 def train(mileage, price, mean, std_dev, learning_rate=0.01, iterations=1500):
 	theta0 = 0
