@@ -11,7 +11,7 @@ def mse(price, mileage):
 	for i in range(n):
 		prediction = get_estimated_price(mileage[i], theta0, theta1)
 		predictions = [get_estimated_price(m, theta0, theta1) for m in mileage]
-		print(f"Predictions: {predictions}")
+		#print(f"Predictions: {predictions}")
 		error = price[i] - prediction
 		sum_square_errors += error ** 2
 	return sum_square_errors / n

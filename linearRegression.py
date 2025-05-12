@@ -7,9 +7,18 @@ from algorithmsRegression import train, mse
 import matplotlib.pyplot as plt
 
 def standarize_data(mileages):
-	mean = np.mean(mileages)
-	std_dev = np.std(mileages)
+	mean = sum(mileages) / len(mileages)
+	if len(mileages) == 0:
+		std_dev = 0
+	else:
+		squares_diff = [(x - mean) ** 2 for x in mileages]
+		variance = sum(squares_diff) / len(mileages)
+		std_dev = variance ** 0.5
 	standardized_mileages = (mileages - mean) / std_dev
+	if std_dev != 0:
+		standardized_mileages = [(x - mean) / std_dev for x in mileages]
+	else:
+		standardized_mileages = [0.0 for _ in mileages]
 	print(f"Media: {mean}")
 	print(f"Desviación estándar: {std_dev}")
 	print(f"Mileages estandarizados:\n{standardized_mileages}")
