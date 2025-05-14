@@ -1,19 +1,31 @@
 from utilsData import get_estimated_price, get_thetas
 
+def r_square(prices, mileages, std_dev, mean):
+    theta0, theta1 = get_thetas()
+    theta1_original = theta1 / std_dev
+    theta0_original = theta0 - (theta1_original * mean)
+    
+    mean_real_prices = sum(prices) / len(prices)
+    predictions = [get_estimated_price(m, theta0_original, theta1_original) for m in mileages]
+    
+    sst = sum((y - mean_real_prices) ** 2 for y in prices)
+    ssr = sum((prices[i] - predictions[i]) ** 2 for i in range(len(prices)))
+    
+    r_square = 1 - (ssr / sst)
+    
+    return r_square
+
 def mse(price, mileage):
 	theta0, theta1 = get_thetas()
-	print(mileage)
+
 	n = len(price)
 	if n == 0:
 		print("Error. No data avalaible")
 		return float('nan')
+
 	sum_square_errors = 0
-	for i in range(n):
-		prediction = get_estimated_price(mileage[i], theta0, theta1)
-		predictions = [get_estimated_price(m, theta0, theta1) for m in mileage]
-		#print(f"Predictions: {predictions}")
-		error = price[i] - prediction
-		sum_square_errors += error ** 2
+	predictions = [get_estimated_price(m, theta0, theta1) for m in mileage]
+	sum_square_errors = sum((price[i] - predictions[i]) ** 2 for i in range(len(price)))
 	return sum_square_errors / n
 
 def train(mileage, price, mean, std_dev, learning_rate=0.01, iterations=1500):
@@ -25,11 +37,11 @@ def train(mileage, price, mean, std_dev, learning_rate=0.01, iterations=1500):
 		print("Error: No data available for training.")
 		return float('nan'), float('nan')
 
-	# mileage = [m / 1000 for m in mileage]
 	for _ in range(iterations):
 		sum_errors0 = 0.0
 		sum_errors1 = 0.0
 		# range in derivada calcular errores individuales y media para obtener predicciones
+
 		for i in range(m):
 			prediction = get_estimated_price(mileage[i], theta0, theta1)
 			error = prediction - price[i]
@@ -42,9 +54,5 @@ def train(mileage, price, mean, std_dev, learning_rate=0.01, iterations=1500):
 
 		theta0 -= tmp_theta0
 		theta1 -= tmp_theta1
-
-		# theta1_original = theta1 / std_dev
-		# theta0_original = theta0 - (theta1_original * mean)
-
 
 	return theta0, theta1

@@ -2,9 +2,6 @@ import numpy as np
 import sys
 import json
 
-# def get_estimated_price(mileage, theta0, theta1, mean, std_dev):
-# 	return theta0 + (theta1 * mileage)
-
 get_estimated_price = lambda mileage, theta0, theta1: theta0 + theta1 * mileage
 
 def get_thetas(filename="thetas.json"):
@@ -27,7 +24,7 @@ def load_data(filename="data.csv"):
 					mileages.append(float(mileage))
 					prices.append(float(price))
 				except ValueError:
-					print(f'Skipping invalid line: {line}')
+					continue
 	except (FileNotFoundError,FileExistsError):
 		print(f'File with filename {filename} does not exists.')
 		sys.exit(-1)

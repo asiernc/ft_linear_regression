@@ -3,7 +3,7 @@ import sys
 import csv
 import numpy as np
 from utilsData import load_data, save_thetas, get_thetas, get_estimated_price
-from algorithmsRegression import train, mse
+from algorithmsRegression import train, mse, r_square
 import matplotlib.pyplot as plt
 
 def standarize_data(mileages):
@@ -21,7 +21,7 @@ def standarize_data(mileages):
 		standardized_mileages = [0.0 for _ in mileages]
 	print(f"Media: {mean}")
 	print(f"Desviación estándar: {std_dev}")
-	print(f"Mileages estandarizados:\n{standardized_mileages}")
+	#print(f"Mileages estandarizados:\n{standardized_mileages}")
 	return standardized_mileages, mean, std_dev
 
 def destandarize_data(standaritzed_mileages, mean, std_dev):
@@ -40,7 +40,6 @@ def get_mileage():
 		except ValueError:
 			print("Error: Please enter a valid numeric value.")
 
-# estimatePrice(mileage) = θ0 + (θ1 ∗ mileage)
 def draw(mileages, prices, theta0, theta1, mean, std_dev):
 	theta1_original = theta1 / std_dev
 	theta0_original = theta0 - (theta1_original * mean)
@@ -57,33 +56,51 @@ def draw(mileages, prices, theta0, theta1, mean, std_dev):
 	plt.legend()
 	plt.savefig("plot.png")
 
+def train_model(standardized_mileages, mileages, prices, mean, std_dev):
+	theta0, theta1 = train(standardized_mileages, prices, mean, std_dev, learning_rate=0.01, iterations=1500)
+	#print({"theta0": theta0, "theta1": theta1})
+	if not (theta0 == float('nan') or theta1 == float('nan')):
+		save_thetas(theta0, theta1)
+		print(f'Mean Square Error: {mse(prices, standardized_mileages):.2f}')
+		print(f'coefficient of determination R²: {r_square(prices, mileages, std_dev, mean):.2f}')
+		print("Model trained and thetas saved.")
+		draw(mileages, prices, theta0, theta1, mean, std_dev)
+	else:
+		print("Error: Training failed due to invalid data.")
+
+def estimate_price(theta0, theta1, mean, std_dev):
+    mileage = get_mileage()
+    mileage_std = (mileage - mean) / std_dev
+    price = get_estimated_price(mileage_std, theta0, theta1)
+    print(f'Estimated price: {price}')
+    
+def menu():
+	print("Write 1 to train the model")
+	print("Write 2 to get an estimated price")
+	print("Write 3 to exit")
+	while True:
+		try:
+			option = int(input("Enter your choice: "))
+			if option in [1, 2, 3]:
+				return option
+			else:
+				print("Invalid option. Please enter 1, 2, or 3.")
+		except ValueError:
+			print("Error: Please enter a valid numeric option.")
+
+
 def main():
 	theta0, theta1 = get_thetas()
 	mileages, prices = load_data()
 	standardized_mileages, mean, std_dev = standarize_data(mileages)
 	while True:
-		try:
-			option = int(input('Write 1 for train the model\nWrite 2 for get an estimated price\nEnter your choice:'))
-			if option == 1:
-				theta0, theta1 = train(standardized_mileages, prices, mean, std_dev, learning_rate=0.01, iterations=1500)
-				print({"theta0": theta0, "theta1": theta1})
-				if not (theta0 == float('nan') or theta1 == float('nan')):
-					save_thetas(theta0, theta1)
-					print(f'Mean Square Error: {mse(prices, standardized_mileages)}')
-					print("Model trained and thetas saved.")
-				else:
-					print("Error: Training failed due to invalid data.")
-			elif option == 2:
-				mileage = get_mileage()
-				mileage_std = (mileage - mean) / std_dev 
-				price = get_estimated_price(mileage_std, theta0, theta1)
-				print(f'Estimated price: {price}')
-			else:
-				print("Invalid option. Please enter 1 or 2")
-			theta0_e, theta1_e = get_thetas()
-			draw(mileages, prices, theta0_e, theta1_e, mean, std_dev)
-		except ValueError:
-			print("Error: Please enter a valid numeric option.")
+		option = menu()
+		if option == 1:
+			train_model(standardized_mileages, mileages, prices, mean, std_dev)
+		elif option == 2:
+			estimate_price(theta0, theta1, mean, std_dev)
+		elif option == 3:
+			break
 
 if __name__ == "__main__":
 	main()
