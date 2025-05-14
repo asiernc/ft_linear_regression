@@ -28,7 +28,7 @@ def mse(price, mileage):
 	sum_square_errors = sum((price[i] - predictions[i]) ** 2 for i in range(len(price)))
 	return sum_square_errors / n
 
-def train(mileage, price, mean, std_dev, learning_rate=0.01, iterations=1500):
+def train(mileage, price, learning_rate=0.01, iterations=1500):
 	theta0 = 0
 	theta1 = 0
 	m = len(mileage)
