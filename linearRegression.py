@@ -1,28 +1,23 @@
 import json
 import sys
 import csv
-import numpy as np
 from utilsData import load_data, save_thetas, get_thetas, get_estimated_price
 from algorithmsRegression import train, mse, r_square
 import matplotlib.pyplot as plt
 from colorama import Fore, Style
 
 def standarize_data(mileages):
+	
 	mean = sum(mileages) / len(mileages)
-	if len(mileages) == 0:
-		std_dev = 0
-	else:
-		squares_diff = [(x - mean) ** 2 for x in mileages]
-		variance = sum(squares_diff) / len(mileages)
-		std_dev = variance ** 0.5
+	variance = sum((m - mean) ** 2 for m in mileages) / len(mileages)
+	std_dev = variance ** 0.5
 	standardized_mileages = (mileages - mean) / std_dev
-	if std_dev != 0:
-		standardized_mileages = [(x - mean) / std_dev for x in mileages]
-	else:
-		standardized_mileages = [0.0 for _ in mileages]
-	# print(f"Media: {mean}")
-	# print(f"Desviación estándar: {std_dev}")
-	#print(f"Mileages estandarizados:\n{standardized_mileages}")
+	
+	if std_dev == 0:
+		print("Error: Standard deviation is zero. Cannot standarize data.")	
+	
+	standardized_mileages = [(x - mean) / std_dev for x in mileages]
+	
 	return standardized_mileages, mean, std_dev
 
 def destandarize_data(standaritzed_mileages, mean, std_dev):
@@ -41,34 +36,32 @@ def get_mileage():
 			print("Error: Please enter a valid numeric value.")
 
 def draw(mileages, prices, theta0, theta1, mean, std_dev):
+
 	theta1_original = theta1 / std_dev
 	theta0_original = theta0 - (theta1_original * mean)
-	min_mileage = min(mileages)
-	max_mileage = max(mileages)
-	regression_mileage = np.linspace(min_mileage, max_mileage, 100)
-	regression_prices = [theta0_original + theta1_original * pt for pt in regression_mileage]
+	
+	predictions = [theta0_original + theta1_original * m for m in mileages]
 
-	plt.scatter(mileages, prices, color='blue', label='Real data')
-	plt.plot(regression_mileage, regression_prices, color='red', label='Regression')
-	plt.ylim(0, max(prices) * 1.1)
-	plt.xlabel('Mileages')
-	plt.ylabel('Price')
+	current_mse = mse(prices, mileages, mean, std_dev)
+
+	plt.figure(figsize=(10,6))
+
+	plt.scatter(mileages, prices, color='blue', label='Real Data')
+	plt.plot(mileages, predictions, color='red', label=f'Regresión (MSE: {current_mse:.2f})')
+
+	for x, y_real, y_pred in zip(mileages, prices, predictions):
+		plt.plot([x, x], [y_real, y_pred], color='gray', linestyle=':', alpha=0.5)
+
+	plt.xlabel('Mileages (m)')
+	plt.ylabel('Price ($)')
+	plt.title('ft_linear_regression: Price vs Mileage')
 	plt.legend()
-	plt.savefig("plot.png")
+	plt.grid(alpha=0.2)
+	plt.savefig("linear_regression.png")
+	plt.close()
 
 def train_model(standardized_mileages, mileages, prices, mean, std_dev):
 	theta0, theta1 = train(standardized_mileages, prices, learning_rate=0.01, iterations=1500)
-	#print({"theta0": theta0, "theta1": theta1})
-	if not (theta0 == float('nan') or theta1 == float('nan')):
-		save_thetas(theta0, theta1)
-		print("Model trained and thetas saved.")
-		draw(mileages, prices, theta0, theta1, mean, std_dev)
-	else:
-		print("Error: Training failed due to invalid data.")
-
-def train_model_2(standardized_mileages, mileages, prices, mean, std_dev):
-	theta0, theta1 = train(standardized_mileages, prices, learning_rate=0.001, iterations=1500)
-	#print({"theta0": theta0, "theta1": theta1})
 	if not (theta0 == float('nan') or theta1 == float('nan')):
 		save_thetas(theta0, theta1)
 		print("Model trained and thetas saved.")
@@ -77,21 +70,21 @@ def train_model_2(standardized_mileages, mileages, prices, mean, std_dev):
 		print("Error: Training failed due to invalid data.")
 
 def estimate_price(theta0, theta1, mean, std_dev):
-    mileage = get_mileage()
-    mileage_std = (mileage - mean) / std_dev
-    price = get_estimated_price(mileage_std, theta0, theta1)
-    print(f'Estimated price: {price}')
+	mileage = get_mileage()
+	theta1_original = theta1 / std_dev
+	theta0_original = theta0 - (theta1_original * mean)
+	price = get_estimated_price(mileage, theta0_original, theta1_original)
+	print(f'Estimated price: {price:.2f}$')
     
 def menu():
 	print(Fore.GREEN + "Write 1 to train the model" + Style.RESET_ALL)
 	print(Fore.GREEN + "Write 2 to get an estimated price" + Style.RESET_ALL)
-	print(Fore.GREEN + "Write 3 to see MeanSquareError (MSE)" + Style.RESET_ALL)
-	print(Fore.GREEN + "Write 4 to see the Coefficient of determination (R²)" + Style.RESET_ALL)
-	print(Fore.RED + "Write 5 to exit" + Style.RESET_ALL)
+	print(Fore.GREEN + "Write 3 to see the Coefficient of determination (R²)" + Style.RESET_ALL)
+	print(Fore.RED + "Write 4 to exit" + Style.RESET_ALL)
 	while True:
 		try:
 			option = int(input(Fore.BLUE + "Enter your choice: " + Style.RESET_ALL))
-			if option in [1, 2, 3, 4, 5, 6]:
+			if option in [1, 2, 3, 4]:
 				return option
 			else:
 				print(Fore.RED + "Invalid option. Please enter 1, 2, 3, 4 or 5." + Style.RESET_ALL)
@@ -99,24 +92,19 @@ def menu():
 			print(Fore.RED + "Error: Please enter a valid numeric option." + Style.RESET_ALL)
 
 def main():
-	theta0, theta1 = get_thetas()
-	mileages, prices = load_data()
-	standardized_mileages, mean, std_dev = standarize_data(mileages)
 	while True:
 		option = menu()
+		theta0, theta1 = get_thetas()
+		mileages, prices = load_data()
+		standardized_mileages, mean, std_dev = standarize_data(mileages)
 		if option == 1:
 			train_model(standardized_mileages, mileages, prices, mean, std_dev)
 		elif option == 2:
 			estimate_price(theta0, theta1, mean, std_dev)
 		elif option == 3:
-			print(f'Mean Square Error: {mse(prices, standardized_mileages):.2f}')
+			print(f'Coefficient of determination R²: {r_square(prices, mileages, std_dev, mean):.2f}')
 		elif option == 4:
-			print(f'coefficient of determination R²: {r_square(prices, mileages, std_dev, mean):.2f}')
-		elif option == 5:
 			break
-		elif option == 6:
-			train_model_2(standardized_mileages, mileages, prices, mean, std_dev)
-
 
 if __name__ == "__main__":
 	main()

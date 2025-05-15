@@ -9,8 +9,10 @@ def get_thetas(filename="thetas.json"):
 		with open(filename, "r") as f:
 			data = json.load(f)
 	except (FileNotFoundError, FileExistsError):
-		print(f'File with filename {filename} does not exists.')
-		sys.exit(-1)
+		print(f'File with filename {filename} does not exists. Creating...')
+		with open(filename, 'w') as f:
+			json.dump({"theta0": 0, "theta1": 0}, f)
+			return 0,0
 	return data["theta0"], data["theta1"]
 
 def load_data(filename="data.csv"):

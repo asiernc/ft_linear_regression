@@ -15,17 +15,19 @@ def r_square(prices, mileages, std_dev, mean):
     
     return r_square
 
-def mse(price, mileage):
+def mse(price, mileage, mean, std_dev):
 	theta0, theta1 = get_thetas()
+	theta1_original = theta1 / std_dev
+	theta0_original = theta0 - (theta1_original * mean)
 
 	n = len(price)
 	if n == 0:
 		print("Error. No data avalaible")
 		return float('nan')
 
-	sum_square_errors = 0
-	predictions = [get_estimated_price(m, theta0, theta1) for m in mileage]
+	predictions = [theta0_original + theta1_original * m for m in mileage]
 	sum_square_errors = sum((price[i] - predictions[i]) ** 2 for i in range(len(price)))
+
 	return sum_square_errors / n
 
 def train(mileage, price, learning_rate=0.01, iterations=1500):
@@ -41,7 +43,6 @@ def train(mileage, price, learning_rate=0.01, iterations=1500):
 		sum_errors0 = 0.0
 		sum_errors1 = 0.0
 		# range in derivada calcular errores individuales y media para obtener predicciones
-
 		for i in range(m):
 			prediction = get_estimated_price(mileage[i], theta0, theta1)
 			error = prediction - price[i]
