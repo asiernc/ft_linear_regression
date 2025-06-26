@@ -52,6 +52,7 @@ The project is split into the following components:
 
 ## 🖼️ Screenshots
 
+![menu](menu.png)
 
 
 ---
